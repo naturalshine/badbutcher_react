@@ -147,7 +147,7 @@ function App() {
             <Route path="/" element={<Home />}></Route>
             <Route path="/home" element={<Home />}></Route>
             <Route path="/import" element={<Import tokenContract={tokenContract} handleTokenContract={handleTokenContract} tokenId={tokenId} handleTokenId={handleTokenId} chain={chain} handleChain={handleChain} handleSubmit={handleSubmit}/>}></Route>
-            <Route path="/mint" element={<Minter img={img} imgBlob={imgBlob} metadata={metadata} tokenContract={tokenContract} tokenId = {tokenId} chain={chain} />}></Route>
+            <Route path="/mint" element={<Minter walletAddress={walletAddress} img={img} imgBlob={imgBlob} metadata={metadata} tokenContract={tokenContract} tokenId = {tokenId} chain={chain} />}></Route>
             <Route path="/butcher" element={<Butcher />}></Route>
             <Route path="/gallery" element={<Gallery />}></Route>
             <Route path="/audio" element={<Audio/>}></Route>

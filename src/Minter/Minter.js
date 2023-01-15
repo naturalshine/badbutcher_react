@@ -1,13 +1,13 @@
 import { useState } from "react";
 import { mintNFT } from "../utils/interact.js";
+import { useNavigate } from "react-router-dom" 
 
-const Minter = ({img, imgBlob, metadata, tokenContract, tokenId, chain}) => {
+const Minter = ({walletAddres, img, imgBlob, metadata, tokenContract, tokenId, chain}) => {
   console.log(img);
   console.log("^image");
   //State variables
   const [status, setStatus] = useState("");
-
-
+  let navigate = useNavigate(); 
 
   let royaltyHolder, royaltyAmount, conditionalAddress;
 
@@ -17,8 +17,12 @@ const Minter = ({img, imgBlob, metadata, tokenContract, tokenId, chain}) => {
   royaltyAmount = metadata[0].royaltyAmount != null ? <h2> Royalty Amount: {metadata[0].royaltyAmount} </h2>: <h2>Royalty Amount: None identified </h2>;
 
   const onMintPressed = async () => {
-    const { status } = await mintNFT(imgBlob, metadata, tokenContract, tokenId, chain);
+    const { success, status } = await mintNFT(walletAddres, imgBlob, metadata, tokenContract, tokenId, chain);
     setStatus(status);
+    if (success){
+      
+    }
+    
   };
 
   return (

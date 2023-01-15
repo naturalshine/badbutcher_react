@@ -4,8 +4,8 @@ async function main() {
     const BadButcher = await ethers.getContractFactory("BadButcher");
  
     // Start deployment, returning a promise that resolves to a contract object
-    const BUTCH = await BadButcher.deploy(); // Instance of the contract 
-    console.log("Contract deployed to address:", BUTCH.address);
+    const BTCHR = await BadButcher.deploy(); // Instance of the contract 
+    console.log("Contract deployed to address:", BTCHR.address);
  }
  
  main()

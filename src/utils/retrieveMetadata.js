@@ -157,15 +157,7 @@ export const retrieveMetadata = async(address, tokenId, chain) => {
 
     }
 
-    //const writeData = await pg_model.createMerchant(tokenContract, tokenId, image, royaltyHolder, royaltyAmountFraction, null )
-  
-    //console.log("WRITE DATA =>", writeData);
-    /*
-    const writeData = await axios.post(process.env.REACT_APP_NODE_API+"/merchants", { tokenContract, tokenId, image, royaltyHolder, royaltyAmountFraction}, 
-      { headers: { 'Content-Type': 'application/json' } } )
-  
-    console.log(writeData.data.message);
-    */
+
 
     let returnMetadata = [{
         "contract": address, 

@@ -1,6 +1,8 @@
-import { pinToIPFS } from './pinata.js'
+const axios = require('axios');
 
 require('dotenv').config();
+
+import { pinToIPFS } from './pinata.js'
 
 const FormData = require('form-data')
 
@@ -12,38 +14,12 @@ const contractABI = require('../contract-abi.json');
 const contractAddress = "0x0eEF58876195d36b3D4b71Df19c5ABAe5B69deE9";
 
 
-export const mintNFT = async(imgBlob, metadata, tokenContract, tokenId, chain) => {
+export const mintNFT = async(walletAddress, imgBlob, metadata, tokenContract, tokenId, chain) => {
 
-    const formData = new FormData();
-    formData.append('file', imgBlob);
-
-    const imgMetadata = JSON.stringify({
-      name: "Butchered " + metadata[0].nftName,
-    });
-    
-    formData.append('pinataMetadata', imgMetadata);
-    
-    const options = JSON.stringify({
-      cidVersion: 0,
-    })
-
-    formData.append('pinataOptions', options);
-    
-    const pinataResponseImg = await pinToIPFS("pinFileToIPFS", formData);
-    
-    if (!pinataResponseImg.success) {
-        return {
-            success: false,
-            status: "😢 Something went wrong while uploading your image.",
-        }
-    } 
-    
-    //console.log("From pinanta, image upload => ", pinataResponseImg.pinataUrl);
-   
     //make metadata
     const butcheredMetadata = new Object();
     butcheredMetadata.name = "Butchered " + metadata[0].nftName;
-    butcheredMetadata.image = pinataResponseImg.pinataUrl;
+    butcheredMetadata.minterAddress = walletAddress;
     butcheredMetadata.description = "bad butcher description";
     butcheredMetadata.butcheredChain = chain;
     butcheredMetadata.projectName = "BAD BUTCHER";
@@ -54,26 +30,31 @@ export const mintNFT = async(imgBlob, metadata, tokenContract, tokenId, chain) =
     butcheredMetadata.butcheredSymbol = metadata[0].symbol;
     butcheredMetadata.butcheredRoyaltyHolder = metadata[0].royaltyHolder;
     butcheredMetadata.butcheredRoyaltyAmount = metadata[0].royaltyAmount;
+    butcheredMetadata.symbol = "BTCHR"
+    
+    // call out to api with imageBlob + metadata
 
+    // login to get token
 
-    //metadata.attributes =  [{"trait_type": "flower","value": "pansy"},{"trait_type": "color","value": "orange"}];
-   
-    //make pinata call
-    const pinataResponse = await pinToIPFS("pinJSONToIPFS", butcheredMetadata);
-    if (!pinataResponse.success) {
+    // take token out of cookies
+
+    // call with metadata + image blob
+
+    /*
+    try{ 
+        const writeData = await axios.post(process.env.REACT_APP_NODE_API, {"image": imgBlob, "metadata": butcheredMetadata}, 
+            { headers: { 'Content-Type': 'application/json' } } )
+    
+            console.log(writeData.data.message);
+    
+    } catch(error){
+        console.log(error)
         return {
             success: false,
-            status: "😢 Something went wrong while uploading your tokenURI.",
+            status: error
         }
-    } 
-
-
-    const tokenURI = pinataResponse.pinataUrl;  
-
-    return {
-      success: true, 
-      status: tokenURI  + " " + pinataResponseImg.pinataUrl
     }
+    */
 
     /*
     window.contract = await new web3.eth.Contract(contractABI, contractAddress);
