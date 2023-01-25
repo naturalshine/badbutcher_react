@@ -1,58 +1,114 @@
 // SPDX-License-Identifier: MIT
-//Declare the version of solidity to compile this contract. 
-//This must match the version of solidity in your hardhat.config.js file
-pragma solidity ^0.8.2;
- 
-//inherits three OpenZepplin smart contract classes
- 
-//contains implementation of ERC721
-import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
- 
-//provides counters that can only be incremented or decremented by one
-import "@openzeppelin/contracts/utils/Counters.sol";
- 
-//implements ownership in the contracts
-import "@openzeppelin/contracts/access/Ownable.sol";
+pragma solidity ^0.8.9;
 
-// implements Royalty interface
-//import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Royalty.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC721/ERC721Upgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721EnumerableUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721URIStorageUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/utils/CountersUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/token/common/ERC2981Upgradeable.sol";
 
+/// @custom:security-contact cst@cst.yt
 
-//This function instantiates the contract and 
-//classifies ERC721 for storage schema
-contract BadButcher is ERC721URIStorage, Ownable {
- 
-    //to keep track of the total number of NFTs minted 
-    using Counters for Counters.Counter;
-    Counters.Counter private _tokenIds;
- 
-    //sets contract's name and symbol
-    constructor() ERC721("BadButcher", "BUTCH") {}
- 
-    //address recipient: address that will receive freshly minted NFT
-    //tokenURI: describes the NFT's metadata
-    function mintNFT(address recipient, string memory tokenURI)
-        public onlyOwner
-        returns (uint256)
-    {
-        _tokenIds.increment();
- 
-        uint256 newItemId = _tokenIds.current();
-        _mint(recipient, newItemId);
-        _setTokenURI(newItemId, tokenURI);
+contract BadButcher is Initializable, ERC721Upgradeable, ERC721EnumerableUpgradeable, ERC721URIStorageUpgradeable, PausableUpgradeable, OwnableUpgradeable, UUPSUpgradeable, ERC2981Upgradeable {
+    using CountersUpgradeable for CountersUpgradeable.Counter;
 
-        return newItemId;
+    CountersUpgradeable.Counter private _tokenIdCounter;
+
+    /// @custom:oz-upgrades-unsafe-allow constructor
+    constructor() {
+        _disableInitializers();
     }
 
-    /*
-    function mintNFTWithRoyalty(address recipient, string memory tokenURI, address royaltyReceiver, uint96 feeNumerator)
-        public onlyOwner
-        returns (uint256) 
-    {
-        uint256 tokenId = mintNFT(recipient, tokenURI);
-         _setTokenRoyalty(tokenId, royaltyReceiver, feeNumerator);
+    function initialize() initializer public {
+        __ERC721_init("BadButcher", "BTCHR");
+        __ERC721Enumerable_init();
+        __ERC721URIStorage_init();
+        __Pausable_init();
+        __Ownable_init();
+        __UUPSUpgradeable_init();
+    }
+
+    function pause() public onlyOwner {
+        _pause();
+    }
+
+    function unpause() public onlyOwner {
+        _unpause();
+    }
+
+
+    function mintWithRoyalty(address recipient, string memory uri, address royaltFeeReceiver, uint96 fee) public returns(uint256){
+        uint256 tokenId = _tokenIdCounter.current();
+        _tokenIdCounter.increment();
+        _safeMint(recipient, tokenId);
+        _setTokenURI(tokenId, uri);
+        _setTokenRoyalty(tokenId, royaltFeeReceiver, fee);
 
         return tokenId;
     }
-    */
+
+    function safeMint(address to, string memory uri) public onlyOwner {
+        uint256 tokenId = _tokenIdCounter.current();
+        _tokenIdCounter.increment();
+        _safeMint(to, tokenId);
+        _setTokenURI(tokenId, uri);
+    }
+
+    function _beforeTokenTransfer(address from, address to, uint256 tokenId, uint256 batchSize)
+        internal
+        whenNotPaused
+        override(ERC721Upgradeable, ERC721EnumerableUpgradeable)
+    {
+        super._beforeTokenTransfer(from, to, tokenId, batchSize);
+    }
+
+
+    function _authorizeUpgrade(address newImplementation)
+        internal
+        onlyOwner
+        override
+    {}
+
+    // The following functions are overrides required by Solidity.
+
+    function _burn(uint256 tokenId)
+        internal
+        override(ERC721Upgradeable, ERC721URIStorageUpgradeable)
+    {
+        super._burn(tokenId);
+    }
+
+    function tokenURI(uint256 tokenId)
+        public
+        view
+        override(ERC721Upgradeable, ERC721URIStorageUpgradeable)
+        returns (string memory)
+    {
+        return super.tokenURI(tokenId);
+    }
+
+    function supportsInterface(bytes4 interfaceId)
+        public
+        view
+        override(ERC721Upgradeable, ERC721EnumerableUpgradeable, ERC2981Upgradeable)
+        returns (bool)
+    {
+        return super.supportsInterface(interfaceId);
+    }
+
+    /*
+    // TODO: DO I HAVE TO OVERRIDE THIS? IT'S NOT DIRECTLY INHERITED
+    function _beforeConsecutiveTokenTransfer(
+        address,
+        address,
+        uint256,
+        uint96
+    ) internal virtual override(ERC721, ERC721Enumerable) {
+        revert("ERC721Enumerable: consecutive transfers not supported");
+    }*/
+
 }
