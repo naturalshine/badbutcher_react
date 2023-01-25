@@ -22,3 +22,10 @@
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+
+hardhat.config.js
+flattened.sol
+package-lock.json
+artifacts/
+cache/
+yarn.lock
