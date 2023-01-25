@@ -1,10 +1,8 @@
 const axios = require('axios');
+const FormData = require('form-data')
 
 require('dotenv').config();
 
-import { pinToIPFS } from './pinata.js'
-
-const FormData = require('form-data')
 
 const alchemyKey = process.env.REACT_APP_ALCHEMY_KEY;
 const { createAlchemyWeb3 } = require("@alch/alchemy-web3");
@@ -15,46 +13,58 @@ const contractAddress = "0x0eEF58876195d36b3D4b71Df19c5ABAe5B69deE9";
 
 
 export const mintNFT = async(walletAddress, imgBlob, metadata, tokenContract, tokenId, chain) => {
+    console.log("IMGBLOB INTERACT =>", imgBlob);
+    let base64Img;
+    // TODO PROB YOU HAVE TO MAKE 2 API CALLS
+    // 1x to ADD DATA (GET ID RETURNED)
+
+    // 1x to STORE IMAGE & TRIGGER BUTCHER ? BC THEN YOU CAN SAVE IMAGE W/DATA ID
+    // OR VICE VERSA & NAME IMG W TOKEN CONTRACT + ID --> MAYBE EASIER
 
     //make metadata
     const butcheredMetadata = new Object();
     butcheredMetadata.name = "Butchered " + metadata[0].nftName;
-    butcheredMetadata.minterAddress = walletAddress;
-    butcheredMetadata.description = "bad butcher description";
-    butcheredMetadata.butcheredChain = chain;
-    butcheredMetadata.projectName = "BAD BUTCHER";
-    butcheredMetadata.butcheredContract = tokenContract;
-    butcheredMetadata.butcheredTokenId = tokenId;
-    butcheredMetadata.ownerOfButcheredToken = metadata[0].owner;
-    butcheredMetadata.butcheredProjectName = metadata[0].projectName;
-    butcheredMetadata.butcheredSymbol = metadata[0].symbol;
-    butcheredMetadata.butcheredRoyaltyHolder = metadata[0].royaltyHolder;
-    butcheredMetadata.butcheredRoyaltyAmount = metadata[0].royaltyAmount;
-    butcheredMetadata.symbol = "BTCHR"
+    butcheredMetadata.description = "Description of Bad Butcher";
+    butcheredMetadata.attributes = [];
+    butcheredMetadata.attributes.push({"trait_type": "project", "value": "BAD BUTCHER"});
+    butcheredMetadata.attributes.push({"trait_type": "butcheredContract", "value": tokenContract});
+    if(chain !== "solana"){
+        butcheredMetadata.attributes.push({"trait_type": "butcheredTokenId", "value": tokenId});
+    }
+    butcheredMetadata.attributes.push({"trait_type": "butcheredChain", "value": chain});
+    butcheredMetadata.attributes.push({"trait_type": "butcheredName", "value": metadata[0].nftName});
+    butcheredMetadata.attributes.push({"trait_type": "butcheredDescription", "value":  metadata[0].description});
+    butcheredMetadata.attributes.push({"trait_type": "butcheredOwner", "value":  metadata[0].owner});
+    butcheredMetadata.attributes.push({"trait_type": "butcheredSymbol", "value":  metadata[0].symbol});
+    butcheredMetadata.attributes.push({"trait_type": "butcheredRoyaltyHolder", "value":  metadata[0].royaltyHolder});
+    butcheredMetadata.attributes.push({"trait_type": "butcheredRoyaltyAmount", "value":  metadata[0].royaltyAmount});
+    butcheredMetadata.attributes.push({"trait_type": "butcheredImageUrl", "value":  metadata[0].originalImage});
+    butcheredMetadata.attributes.push({"trait_type": "butcheredMetadataUrl", "value":  metadata[0].token_uri});
+    butcheredMetadata.attributes.push({"trait_type": "butcherMinter", "value": walletAddress});    
     
-    // call out to api with imageBlob + metadata
+    // add existing attributes from original NFT
+    butcheredMetadata.attributes = butcheredMetadata.attributes.concat(metadata[0].attributes);
 
     // login to get token
-
-    // take token out of cookies
-
-    // call with metadata + image blob
-
-    /*
-    try{ 
-        const writeData = await axios.post(process.env.REACT_APP_NODE_API, {"image": imgBlob, "metadata": butcheredMetadata}, 
+    const login = await axios.post(process.env.REACT_APP_BUTCHER_LOGIN, {"username": process.env.REACT_APP_JWT_USER, "password": process.env.REACT_APP_JWT_PASSWORD}, 
             { headers: { 'Content-Type': 'application/json' } } )
     
-            console.log(writeData.data.message);
+    const jwt = login.data.jwt
+
+    console.log(login.data.jwt)
+
+    // call out to api with imageBlob + metadata
+    const nft = await axios.post(process.env.REACT_APP_BUTCHER_API + '/butcher', {"image": base64Img, "metadata": butcheredMetadata}, 
+    { headers: { 'Content-Type': 'application/json', 'authorization' : 'Bearer ' + jwt } } )
+    console.log(nft);
     
-    } catch(error){
-        console.log(error)
-        return {
-            success: false,
-            status: error
-        }
-    }
-    */
+    const ipfsMetadata = nft.data.ipfsMetadata;
+    const ipfsImage = nft.data.ipfsImage;
+    const image = nft.data.image;
+    const royaltyHolder = nft.data.royaltyHolder;
+    const royaltyAmount = nft.data.royaltyAmount;
+    const polygonTokenId = nft.data.tokenId;
+    const polygonContract = nft.data.contract;
 
     /*
     window.contract = await new web3.eth.Contract(contractABI, contractAddress);

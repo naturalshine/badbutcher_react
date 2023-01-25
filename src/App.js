@@ -84,6 +84,7 @@ function App() {
         try{
           console.log(metadata[0].image)
           let localImage = await fetchImage(metadata[0].image);
+          console.log("LOCAL IMAGE =>", localImage);
           if(localImage == undefined || localImage == null){
             throw "imageError";
           } 
@@ -91,7 +92,7 @@ function App() {
           const imageObjectURL = URL.createObjectURL(localImage);
           console.log(imageObjectURL);
           setImg(imageObjectURL);
-          console.log(img);
+          console.log("IMAGE =>", img);
           navigate("/mint");
         } catch (error) {
           errorMessage =  <h3> Sorry: we can't fetch this NFT! Try a different NFT.</h3>;

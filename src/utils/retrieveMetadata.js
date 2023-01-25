@@ -11,9 +11,7 @@ const alchemyKey = process.env.REACT_APP_ALCHEMY_KEY;
 
 export const fetchImage = async (img) => {
     const res = await fetch(img);
-    console.log(res);
     const imageBlob = await res.blob();
-    console.log(imageBlob)
     return imageBlob
   };
 
@@ -30,7 +28,7 @@ export const retrieveMetadata = async(address, tokenId, chain) => {
 
     
 
-    let incomingChain, response, fullData, imageUrl, nftName, projectName, owner, normalizedMetadata, fullMetadata, symbol; 
+    let incomingChain, response, imageUrl, normalizedMetadata; 
     incomingChain = chain; 
 
     try {
@@ -56,7 +54,6 @@ export const retrieveMetadata = async(address, tokenId, chain) => {
 
         if (!(chain == "Solana")){
                 let normalizeMetadata = true; 
-                let format = "decimal";
 
                 response = await Moralis.EvmApi.nft.getNFTMetadata({
                     address,
@@ -82,14 +79,8 @@ export const retrieveMetadata = async(address, tokenId, chain) => {
         console.log(response?.result);
         console.log(response?.result._data.normalizedMetadata.image);
 
-        fullData = response?.result._data;
         imageUrl = await handleUrl(response?.result._data.normalizedMetadata.image);
-        nftName = response?.result._data.normalizedMetadata.name != null ? response?.result._data.normalizedMetadata.name : response?.result._data.name; 
-        projectName = response?.result._data.name;
-        owner = response?.result._data.ownerOf._value;
-        normalizedMetadata = response?.result._data.normalizedMetadata;
-        fullMetadata = response?.result._data.metadata;
-        symbol = response?.result._data.symbol;
+
 
     } catch (error){
         console.log(error);
@@ -144,11 +135,17 @@ export const retrieveMetadata = async(address, tokenId, chain) => {
             contract = new web3.eth.Contract(contractAbiRetrieved, address);
             const dummySalePrice =  web3.utils.toBN(String(1000) + "0".repeat(11));
             [royaltyHolder, royaltyAmount] = await contract.methods.royaltyInfo(tokenId, dummySalePrice).call();
-            
+            if (royaltyHolder == undefined){
+                royaltyHolder = '';
+            }
+            if (royaltyAmount == undefined){
+                royaltyAmount = null;
+            } else {
+                royaltyAmount = royaltyAmount.toString();
+                royaltyAmount = parseInt(royaltyAmount);
+                royaltyAmountFraction = royaltyAmount/1000;
+            }
 
-            royaltyAmount = royaltyAmount.toString();
-            royaltyAmount = parseInt(royaltyAmount);
-            royaltyAmountFraction = royaltyAmount/1000;
       
          } catch (error) {
            console.log("Contract ABI error or no royalty info avaialable => ", error);
@@ -163,16 +160,17 @@ export const retrieveMetadata = async(address, tokenId, chain) => {
         "contract": address, 
         "tokenId": tokenId, 
         "chain": chain, 
-        "image": imageUrl, 
-        "nftName": nftName, 
-        "projectName": projectName, 
-        "owner": owner, 
-        "symbol": symbol, 
+        "image": imageUrl,
+        "originalImage": response?.result._data.normalizedMetadata.image,
+        "nftName": response?.result._data.normalizedMetadata.name != null ? response?.result._data.normalizedMetadata.name : response?.result._data.name, 
+        "project": response?.result._data.description, 
+        "owner": response?.result._data.ownerOf._value, 
+        "symbol": response?.result._data.symbol, 
+        "token_uri": response?.result._data.token_uri,
         "normalizedMetadata": normalizedMetadata, 
-        "fullMetadata": fullMetadata, 
         "royaltyHolder": royaltyHolder, 
         "royaltyAmount": royaltyAmountFraction,
-        "fullData": fullData
+        "attributes": response?.result._data.normalizedMetadata.attributes,
     }]
     
     console.log(returnMetadata);

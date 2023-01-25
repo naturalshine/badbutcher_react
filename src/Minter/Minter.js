@@ -15,12 +15,13 @@ const Minter = ({walletAddres, img, imgBlob, metadata, tokenContract, tokenId, c
   
   royaltyHolder = metadata[0].royaltyHolder != "" ? <h2> Royalty Holder: {metadata[0].royaltyHolder} </h2>: <h2>Royalty Holder: None identified </h2>;
   royaltyAmount = metadata[0].royaltyAmount != null ? <h2> Royalty Amount: {metadata[0].royaltyAmount} </h2>: <h2>Royalty Amount: None identified </h2>;
+  console.log("img MINTER =>", img);
 
   const onMintPressed = async () => {
     const { success, status } = await mintNFT(walletAddres, imgBlob, metadata, tokenContract, tokenId, chain);
     setStatus(status);
     if (success){
-      
+      console.log("success");
     }
     
   };
