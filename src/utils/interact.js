@@ -1,8 +1,6 @@
 const axios = require('axios');
-const FormData = require('form-data')
 
 require('dotenv').config();
-
 
 const alchemyKey = process.env.REACT_APP_ALCHEMY_KEY;
 const { createAlchemyWeb3 } = require("@alch/alchemy-web3");
@@ -13,15 +11,18 @@ const contractAddress = "0x0eEF58876195d36b3D4b71Df19c5ABAe5B69deE9";
 
 
 export const mintNFT = async(walletAddress, imgBlob, metadata, tokenContract, tokenId, chain) => {
-    console.log("IMGBLOB INTERACT =>", imgBlob);
-    let base64Img;
-    // TODO PROB YOU HAVE TO MAKE 2 API CALLS
-    // 1x to ADD DATA (GET ID RETURNED)
+    console.log("WALLET ADDRESS => ", walletAddress);
 
-    // 1x to STORE IMAGE & TRIGGER BUTCHER ? BC THEN YOU CAN SAVE IMAGE W/DATA ID
-    // OR VICE VERSA & NAME IMG W TOKEN CONTRACT + ID --> MAYBE EASIER
+    function blobToBase64(blob) {
+        return new Promise((resolve, _) => {
+          const reader = new FileReader();
+          reader.onloadend = () => resolve(reader.result);
+          reader.readAsDataURL(blob);
+        });
+      }
 
     //make metadata
+    
     const butcheredMetadata = new Object();
     butcheredMetadata.name = "Butchered " + metadata[0].nftName;
     butcheredMetadata.description = "Description of Bad Butcher";
@@ -37,7 +38,7 @@ export const mintNFT = async(walletAddress, imgBlob, metadata, tokenContract, to
     butcheredMetadata.attributes.push({"trait_type": "butcheredOwner", "value":  metadata[0].owner});
     butcheredMetadata.attributes.push({"trait_type": "butcheredSymbol", "value":  metadata[0].symbol});
     butcheredMetadata.attributes.push({"trait_type": "butcheredRoyaltyHolder", "value":  metadata[0].royaltyHolder});
-    butcheredMetadata.attributes.push({"trait_type": "butcheredRoyaltyAmount", "value":  metadata[0].royaltyAmount});
+    butcheredMetadata.attributes.push({"trait_type": "butcheredRoyalty", "value":  metadata[0].royaltyAmount});
     butcheredMetadata.attributes.push({"trait_type": "butcheredImageUrl", "value":  metadata[0].originalImage});
     butcheredMetadata.attributes.push({"trait_type": "butcheredMetadataUrl", "value":  metadata[0].token_uri});
     butcheredMetadata.attributes.push({"trait_type": "butcherMinter", "value": walletAddress});    
@@ -53,47 +54,105 @@ export const mintNFT = async(walletAddress, imgBlob, metadata, tokenContract, to
 
     console.log(login.data.jwt)
 
-    // call out to api with imageBlob + metadata
-    const nft = await axios.post(process.env.REACT_APP_BUTCHER_API + '/butcher', {"image": base64Img, "metadata": butcheredMetadata}, 
-    { headers: { 'Content-Type': 'application/json', 'authorization' : 'Bearer ' + jwt } } )
-    console.log(nft);
+    
+    let imgReturn, imgToSend, nft;    
+
+    try {
+        imgToSend = await blobToBase64(imgBlob);
+
+        let data = {"image": imgToSend}
+        imgReturn = await axios.post(process.env.REACT_APP_BUTCHER_API + '/upload', data, {
+            headers: {
+                'authorization' : 'Bearer ' + jwt,
+                'Content-Type' : 'application/json'
+            }
+        }) 
+        
+        console.log("ID =>", imgReturn.data.id);
+
+        // call out to api with imageBlob + metadata
+        nft = await axios.post(process.env.REACT_APP_BUTCHER_API + '/butcher', 
+            {"metadata": [butcheredMetadata], "butcherId": imgReturn.data.id }, 
+            { headers: { 'Content-Type': 'application/json', 'authorization' : 'Bearer ' + jwt } 
+        });
+        
+        console.log(nft.data.ipfsMetadata);
+    
+    } catch(error){
+        return {
+            success: false,
+            status: "😥 Something went wrong: " + error.message
+        }    
+    }
+    
     
     const ipfsMetadata = nft.data.ipfsMetadata;
     const ipfsImage = nft.data.ipfsImage;
-    const image = nft.data.image;
     const royaltyHolder = nft.data.royaltyHolder;
     const royaltyAmount = nft.data.royaltyAmount;
-    const polygonTokenId = nft.data.tokenId;
-    const polygonContract = nft.data.contract;
+    const finalMetadata = nft.data.finalMetadata;
 
-    /*
     window.contract = await new web3.eth.Contract(contractABI, contractAddress);
+
+    const finalRoyalty = Math.trunc(royaltyAmount * 100)
 
     //set up your Ethereum transaction
     const transactionParameters = {
         to: contractAddress, // Required except during contract publications.
         from: window.ethereum.selectedAddress, // must match user's active address.
-        'data': window.contract.methods.mintNFT(window.ethereum.selectedAddress, tokenURI).encodeABI() //make call to NFT smart contract 
+        'data': window.contract.methods.mintNFT(walletAddress, ipfsMetadata, royaltyHolder, finalRoyalty).encodeABI() //make call to NFT smart contract 
     };
 
     //sign transaction via Metamask
+    let etherscan, ethTokenId;
     try {
         const txHash = await window.ethereum
             .request({
                 method: 'eth_sendTransaction',
                 params: [transactionParameters],
             });
-        return {
-            success: true,
-            status: "✅ Check out your transaction on Etherscan: https://goerli.etherscan.io/tx/" + txHash
-        }
+        
+        // how to get token id? 
+        ethTokenId = ""
+        etherscan = "https://goerli.etherscan.io/tx/" + txHash
+        
     } catch (error) {
         return {
             success: false,
             status: "😥 Something went wrong: " + error.message
         }
     }
-    */
+
+    // mint polygon
+    let polygonMint;
+    const polyData = {}
+    polyData.id = nft.data.id;
+    polyData.ethTokenId = ethTokenId;
+
+    try{
+        polygonMint = await axios.post(process.env.REACT_APP_BUTCHER_API + '/mint', polyData, {
+            headers: {
+                'authorization' : 'Bearer ' + jwt,
+                'Content-Type' : 'application/json'
+            }
+        }) ;
+    } catch (error) {
+        console.log(error);
+    }
+
+
+
+    return {
+        success: true,
+        polygonTokenId: polygonMint.polygonTokenId,
+        ethTokenId: ethTokenId,
+        ipfsMetadata: ipfsMetadata,
+        ipfsImage: ipfsImage, 
+        royaltyHolder: royaltyHolder,
+        royaltyAmount: royaltyAmount,
+        finalMetadta: finalMetadata,
+    }
+    
 }
 
 

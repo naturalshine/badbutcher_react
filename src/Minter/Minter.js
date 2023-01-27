@@ -2,7 +2,7 @@ import { useState } from "react";
 import { mintNFT } from "../utils/interact.js";
 import { useNavigate } from "react-router-dom" 
 
-const Minter = ({walletAddres, img, imgBlob, metadata, tokenContract, tokenId, chain}) => {
+const Minter = ({walletAddress, img, imgBlob, metadata, tokenContract, tokenId, chain}) => {
   console.log(img);
   console.log("^image");
   //State variables
@@ -15,13 +15,17 @@ const Minter = ({walletAddres, img, imgBlob, metadata, tokenContract, tokenId, c
   
   royaltyHolder = metadata[0].royaltyHolder != "" ? <h2> Royalty Holder: {metadata[0].royaltyHolder} </h2>: <h2>Royalty Holder: None identified </h2>;
   royaltyAmount = metadata[0].royaltyAmount != null ? <h2> Royalty Amount: {metadata[0].royaltyAmount} </h2>: <h2>Royalty Amount: None identified </h2>;
-  console.log("img MINTER =>", img);
 
   const onMintPressed = async () => {
-    const { success, status } = await mintNFT(walletAddres, imgBlob, metadata, tokenContract, tokenId, chain);
-    setStatus(status);
+    const { success, status } = await mintNFT(walletAddress, imgBlob, metadata, tokenContract, tokenId, chain);
+    URL.revokeObjectURL(imgBlob);
     if (success){
+      setStatus(status);
       console.log("success");
+      navigate("/butchered");
+    } else {
+      setStatus("Something went wrong! " + status);
+      navigate("/import");
     }
     
   };
