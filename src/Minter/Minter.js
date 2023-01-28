@@ -1,8 +1,9 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom" 
+
 import { mintEth } from "../utils/mintEth";
 import { mintPolygon } from "../utils/mintPolygon";
 import { butcherNft } from "../utils/butcher"
-import { useNavigate } from "react-router-dom" 
 
 const Minter = ({walletAddress, img, imgBlob, metadata, tokenContract, tokenId, chain}) => {
 

@@ -115,7 +115,7 @@ export const retrieveMetadata = async(address, tokenId, chain) => {
 
           if (contractAbiRetrieved == "Invalid Address Format" || contractAbiRetrieved == "Contract source code not verified"){
             console.log("Invalid Address Format OR contract source code not verified... Trying with unverified NFT ABI");
-            let unverifiedContractAbi = require('../contract-abi-unverified.json')
+            let unverifiedContractAbi = require('../../abis/contract-abi-unverified.json')
             contractAbiRetrieved = unverifiedContractAbi;
           } 
 

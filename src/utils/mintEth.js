@@ -6,14 +6,14 @@ const alchemyKey = process.env.REACT_APP_ALCHEMY_KEY_GOERLI;
 const { createAlchemyWeb3 } = require("@alch/alchemy-web3");
 const web3 = createAlchemyWeb3(alchemyKey);
 
-const contractABI = require('../contract-abi.json');
+const contractABI = require('../../abis/contract-abi.json');
 const contractAddress = process.env.REACT_APP_CONTRACT;
 
 
 export const mintEth = async(walletAddress, data) => {
     try{
 
-        window.contract = await new web3.eth.Contract(contractABI, contractAddress);
+        window.contract = new web3.eth.Contract(contractABI, contractAddress);
 
         const finalRoyalty = Math.trunc(data.royaltyAmount * 100)
 
