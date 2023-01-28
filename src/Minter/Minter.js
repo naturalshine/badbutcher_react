@@ -55,7 +55,9 @@ const Minter = ({walletAddress, img, imgBlob, metadata, tokenContract, tokenId, 
       <br></br>
 
       <img src={img} />
-      
+      <h2 id="status">
+        {status}
+      </h2>
       <br></br>
       <h1 id="title">On the chopping block:</h1>
       {conditionalAddress}
@@ -68,9 +70,7 @@ const Minter = ({walletAddress, img, imgBlob, metadata, tokenContract, tokenId, 
       <button id="mintButton" onClick={onMintPressed}>
         Mint NFT
       </button>
-      <p id="status">
-        {status}
-      </p>
+
     </div>
   );
 };
