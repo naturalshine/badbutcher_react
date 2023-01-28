@@ -1,4 +1,3 @@
-const axios = require('axios');
 
 require('dotenv').config();
 
@@ -46,15 +45,16 @@ export const mintEth = async(walletAddress, data) => {
 
 
         return {
-            success: true,
-            status: "Done minting Ethereum token... Minting polygon token...",
+            successEth: true,
+            statusEth: "Done minting Ethereum token... Minting polygon token...",
+            txHash: txHash,
         }
 
     } catch (error) {
         console.log("ERROR! =>", error)
         return {
-            success: false,
-            status: "😥 Something went wrong: " + error.message
+            successEth: false,
+            statusEth: "😥 Something went wrong: " + error.message
        }    
     }
 

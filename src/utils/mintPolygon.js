@@ -26,15 +26,15 @@ export const mintPolygon = async(data, ethTokenId) => {
         }) ;
 
         return {
-            success: true,
-            status: "Minting complete",
+            successPoly: true,
+            statusPoly: "Minting complete",
             polygonTokenId: polygonMint.polygonTokenId,
         }
 
     } catch (error) {
         return {
-            success: false,
-            status: "😥 Something went wrong: " + error.message
+            successPoly: false,
+            statusPoly: "😥 Something went wrong: " + error.message
        }    
     }
 

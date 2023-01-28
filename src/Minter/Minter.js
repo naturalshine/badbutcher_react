@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom"
 import { mintEth } from "../utils/mintEth";
 import { mintPolygon } from "../utils/mintPolygon";
 import { butcherNft } from "../utils/butcher"
+import { retrieveEthToken } from "../utils/retrieveEthToken";
 
 const Minter = ({walletAddress, img, imgBlob, metadata, tokenContract, tokenId, chain}) => {
 
@@ -30,7 +31,7 @@ const Minter = ({walletAddress, img, imgBlob, metadata, tokenContract, tokenId, 
       navigate("/import");
     }
 
-    const { successEth, statusEth } = await mintEth(walletAddress, data);
+    const { successEth, statusEth, txHash } = await mintEth(walletAddress, data);
 
     if (successEth){
       setStatus(statusEth);
@@ -38,9 +39,8 @@ const Minter = ({walletAddress, img, imgBlob, metadata, tokenContract, tokenId, 
       setStatus("Something went wrong! " + statusEth);
     }
 
-    const ethTokenId = "40"
 
-    const { successPoly, statusPoly, mintPolyData } = await mintPolygon(data, ethTokenId);
+    const { successPoly, statusPoly, mintPolyData } = await mintPolygon(data);
 
     if (successPoly){
       setStatus(statusPoly);
@@ -48,6 +48,13 @@ const Minter = ({walletAddress, img, imgBlob, metadata, tokenContract, tokenId, 
       setStatus("Something went wrong! " + statusPoly);
     }
     
+    const { successRetrieve, statusRetrieve, ethTokenId } = await retrieveEthToken(txHash);
+    if (successRetrieve){
+      setStatus(statusRetrieve);
+    } else {
+      setStatus("Something went wrong! " + statusRetrieve);
+    }
+  
   };
 
   return (
