@@ -19,8 +19,8 @@ const Minter = ({walletAddress, img, imgBlob, metadata, tokenContract, tokenId, 
   royaltyAmount = metadata[0].royaltyAmount != null ? <h2> Royalty Amount: {metadata[0].royaltyAmount} </h2>: <h2>Royalty Amount: None identified </h2>;
 
   const onMintPressed = async () => {
-    status = "Butchering image and creating metadata. This may take up to a minute."
-    setStatus(status);
+    const initStatus = "Butchering image and creating metadata. This may take up to a minute."
+    setStatus(initStatus);
     const { success, status, data } = await butcherNft(walletAddress, imgBlob, metadata, tokenContract, tokenId, chain);
     URL.revokeObjectURL(imgBlob);
     if (success){
@@ -30,23 +30,22 @@ const Minter = ({walletAddress, img, imgBlob, metadata, tokenContract, tokenId, 
       navigate("/import");
     }
 
-    const { successEth, statusEth, mintEthData } = await mintEth(walletAddress, data);
+    const { successEth, statusEth } = await mintEth(walletAddress, data);
 
     if (successEth){
       setStatus(statusEth);
     } else {
       setStatus("Something went wrong! " + statusEth);
-      navigate("/import");
     }
 
-    const { successPoly, statusPoly, mintPolyData } = await mintPolygon(walletAddress, data, mintEthData);
+    const ethTokenId = "40"
+
+    const { successPoly, statusPoly, mintPolyData } = await mintPolygon(data, ethTokenId);
 
     if (successPoly){
       setStatus(statusPoly);
-      navigate("/butchered");
     } else {
       setStatus("Something went wrong! " + statusPoly);
-      navigate("/import");
     }
     
   };

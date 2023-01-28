@@ -7,7 +7,7 @@ const axios = require('axios');
 
 
 const moralisKey = process.env.REACT_APP_MORALIS_KEY;
-const alchemyKey = process.env.REACT_APP_ALCHEMY_KEY;
+const alchemyKey = process.env.REACT_APP_ALCHEMY_URL;
 
 export const fetchImage = async (img) => {
     const res = await fetch(img);
@@ -115,7 +115,7 @@ export const retrieveMetadata = async(address, tokenId, chain) => {
 
           if (contractAbiRetrieved == "Invalid Address Format" || contractAbiRetrieved == "Contract source code not verified"){
             console.log("Invalid Address Format OR contract source code not verified... Trying with unverified NFT ABI");
-            let unverifiedContractAbi = require('../../abis/contract-abi-unverified.json')
+            let unverifiedContractAbi = require('../abis/contract-abi-unverified.json')
             contractAbiRetrieved = unverifiedContractAbi;
           } 
 

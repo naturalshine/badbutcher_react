@@ -2,15 +2,8 @@ const axios = require('axios');
 
 require('dotenv').config();
 
-const alchemyKey = process.env.REACT_APP_ALCHEMY_KEY;
-const { createAlchemyWeb3 } = require("@alch/alchemy-web3");
-const web3 = createAlchemyWeb3(alchemyKey);
 
-const contractABI = require('../contract-abi.json');
-const contractAddress = "0x0eEF58876195d36b3D4b71Df19c5ABAe5B69deE9";
-
-
-export const mintPolygon = async(walletAddress, data, ethTokenId) => {
+export const mintPolygon = async(data, ethTokenId) => {
     try{
 
         // login to get jwt
