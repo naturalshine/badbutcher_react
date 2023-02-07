@@ -70,7 +70,7 @@ export const butcherNft = async(walletAddress, imgBlob, metadata, tokenContract,
     } catch(error){
         return {
             success: false,
-            status: "😥 Something went wrong: " + error.message
+            butcherStatus: "😥 Something went wrong: " + error.message
         }    
     }
         

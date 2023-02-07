@@ -1,18 +1,51 @@
 import Moralis  from 'moralis';
-import { EvmChain } from '@moralisweb3/evm-utils';
-
-require('dotenv').config();
+import { EvmChain } from '@moralisweb3/common-evm-utils';
 
 const axios = require('axios');
 
+require('dotenv').config();
 
 const moralisKey = process.env.REACT_APP_MORALIS_KEY;
 const alchemyKey = process.env.REACT_APP_ALCHEMY_URL;
 
+export const processImage = async (rawUrl) => {
+    if (rawUrl.startsWith('https')){
+        return rawUrl; 
+  
+    } else if (rawUrl.startsWith('ipfs')){
+    
+        const URL = "https://butcher.infura-ipfs.io/ipfs/"
+        const hash = rawUrl.replace(/^ipfs?:\/\//, '')
+        const ipfsURL = URL + hash
+    
+        console.log("Ipfs identified =>", ipfsURL)
+        return ipfsURL;
+  
+    } else if (rawUrl.startsWith('arweave')){
+        //is there an arweave standard hash -- or retrieve hash + reliable host?
+        return rawUrl;
+  
+    } else {
+        return rawUrl;
+    }
+
+}
+
 export const fetchImage = async (img) => {
-    const res = await fetch(img);
-    const imageBlob = await res.blob();
+    let res, imageBlob;
+    try{
+        res = await fetch(img);
+        imageBlob = await res.blob();
+    }catch(error){
+        // if we get an error from the image server
+        // try running through Heroku for CORS
+        const url = process.env.REACT_APP_HEROKU_URL + img
+        res = await fetch(url);
+        imageBlob = await res.blob();
+    }
+
     return imageBlob
+
   };
 
 export const retrieveMetadata = async(address, tokenId, chain) => {
@@ -79,7 +112,7 @@ export const retrieveMetadata = async(address, tokenId, chain) => {
         console.log(response?.result);
         console.log(response?.result._data.normalizedMetadata.image);
 
-        imageUrl = await handleUrl(response?.result._data.normalizedMetadata.image);
+        imageUrl = await processImage(response?.result._data.normalizedMetadata.image);
 
 
     } catch (error){
@@ -183,25 +216,3 @@ export const retrieveMetadata = async(address, tokenId, chain) => {
   
   };
   
-  async function handleUrl(rawUrl) {
-    if (rawUrl.startsWith('https')){
-        return rawUrl; 
-  
-    } else if (rawUrl.startsWith('ipfs')){
-    
-        const URL = "https://butcher.infura-ipfs.io/ipfs/"
-        const hash = rawUrl.replace(/^ipfs?:\/\//, '')
-        const ipfsURL = URL + hash
-    
-        console.log("Ipfs identified =>", ipfsURL)
-        return ipfsURL;
-  
-    } else if (rawUrl.startsWith('arweave')){
-        //is there an arweave standard hash -- or retrieve hash + reliable host?
-        return rawUrl;
-  
-    } else {
-        return rawUrl;
-    }
-  
-  }

@@ -1,44 +1,40 @@
 import { useEffect, useState } from "react";
 //import { retrieveMetadata} from "../utils/retrieveMetadata.js";
 
-const Butcher = (props) => {
-    const [metadata, setMetadata] = useState("");
-    const [tokenContract, setTokenContract] = useState("");
-    const [tokenId, setTokenId] = useState("");
+import { fetchImage, processImage } from "../utils/retrieveMetadata";
 
-    const onContractData = async () => {
-      console.log(tokenContract);
-      //const { metadata } = await retrieveMetadata(tokenContract, tokenId);
-      //setMetadata(metadata);
-      //navigate("/mint");
-  };
-  
+const Butcher = ({status, metadata, walletAddress, img}) => {
+    const [butcheredImage, setButcheredImage] = useState('');
+    const useData = metadata[0]
+
+    const prepareDisplay = async () => { 
+      try{
+          console.log("IPFS IMAGE =>", useData.ipfsImage)
+          const imgUrl = await processImage(useData.ipfsImage);
+          let localImage = await fetchImage(imgUrl);
+          if(localImage == undefined || localImage == null){
+            throw "imageError";
+          } 
+          const imageObjectURL = URL.createObjectURL(localImage);
+          const butcheredImage = imageObjectURL;
+          setButcheredImage(butcheredImage);
+        } catch(error){
+          status = "Sorry, something went wrong. Please reconnect your wallet and refresh."
+        }
+    }
+    
+    useEffect(async () => {
+      await prepareDisplay();
+    });  
+
     return (
         <div className="Butcher">
-        <h1 id="title">🧙‍♂️ Fetch yr contract data</h1>
-        <p>
-          Simply add your contract's address and the token id of the NFT you want to butcher...
-        </p>
-        <form>
-          <h2>🖼 contract address: </h2>
-          <input
-            type="text"
-            placeholder="0xkjdflksjdlfkjsdlf"
-            onChange={(event) => setTokenContract(event.target.value)}
-          />
-          <h2>🤔 token id: </h2>
-          <input
-            type="text"
-            placeholder="42"
-            onChange={(event) => setTokenId(event.target.value)}
-          />
-  
-        </form>
-        <button id="metadataButton" onClick={onContractData}>
-          Retrieve NFT info
-        </button>
+        <img src={img} />
+        <img src={butcheredImage} />
+
+
         <p id="metadata">
-          {metadata}
+          {useData}
         </p>
         </div>
       );

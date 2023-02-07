@@ -84,15 +84,12 @@ function App() {
         try{
           console.log(metadata[0].image)
           let localImage = await fetchImage(metadata[0].image);
-          console.log("LOCAL IMAGE =>", localImage);
           if(localImage == undefined || localImage == null){
             throw "imageError";
           } 
           setImgBlob(localImage)
           const imageObjectURL = URL.createObjectURL(localImage);
-          console.log(imageObjectURL);
           setImg(imageObjectURL);
-          console.log("IMAGE =>", img);
           navigate("/mint");
         } catch (error) {
           errorMessage =  <h3> Sorry: we can't fetch this NFT! Try a different NFT.</h3>;
@@ -108,6 +105,10 @@ function App() {
     }
 
   }
+
+  const handleMetadata = async (newMetadata) => { 
+    setMetadata(newMetadata);
+  };
 
   const handleTokenContract = event => {
     setTokenContract(event.target.value);
@@ -149,7 +150,7 @@ function App() {
             <Route path="/home" element={<Home />}></Route>
             <Route path="/import" element={<Import tokenContract={tokenContract} handleTokenContract={handleTokenContract} tokenId={tokenId} handleTokenId={handleTokenId} chain={chain} handleChain={handleChain} handleSubmit={handleSubmit}/>}></Route>
             <Route path="/mint" element={<Minter walletAddress={walletAddress} img={img} imgBlob={imgBlob} metadata={metadata} tokenContract={tokenContract} tokenId = {tokenId} chain={chain} />}></Route>
-            <Route path="/butcher" element={<Butcher />}></Route>
+            <Route path="/butcher" element={<Butcher status={status} metadata={metadata} walletAddress={walletAddress} img={img} />}></Route>
             <Route path="/gallery" element={<Gallery />}></Route>
             <Route path="/audio" element={<Audio/>}></Route>
        </Routes>     

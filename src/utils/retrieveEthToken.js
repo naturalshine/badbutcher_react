@@ -1,4 +1,6 @@
 
+const axios = require('axios');
+
 require('dotenv').config();
 
 const alchemyKey = process.env.REACT_APP_ALCHEMY_URL;
@@ -9,7 +11,7 @@ const contractABI = require('../abis/contract-abi.json');
 const contractAddress = process.env.REACT_APP_CONTRACT;
 
 
-export const retrieveEthToken = async(txHash) => {
+export const retrieveEthToken = async(txHash, id) => {
     try{
 
         let ethTokenId;
@@ -19,6 +21,21 @@ export const retrieveEthToken = async(txHash) => {
             console.log("DELAYED TOKEN ID => ", ethTokenId)
         });
 
+        // login to get jwt
+        const login = await axios.post(process.env.REACT_APP_BUTCHER_LOGIN, {"username": process.env.REACT_APP_JWT_USER, "password": process.env.REACT_APP_JWT_PASSWORD}, 
+            { headers: { 'Content-Type': 'application/json' } } )
+        
+        const jwt = login.data.jwt
+
+        //post token to database
+        const ethObj = {'ethTokenId': ethTokenId}
+
+        await axios.post(process.env.REACT_APP_BUTCHER_API + '/api/slaughtered/' + id, ethObj, {
+            headers: {
+                'authorization' : 'Bearer ' + jwt,
+                'Content-Type' : 'application/json'
+            }
+        }) ;
 
         return {
             successRetrieve: true,

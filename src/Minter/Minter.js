@@ -4,12 +4,13 @@ import { useNavigate } from "react-router-dom"
 import { mintEth } from "../utils/mintEth";
 import { mintPolygon } from "../utils/mintPolygon";
 import { butcherNft } from "../utils/butcher"
-import { retrieveEthToken } from "../utils/retrieveEthToken";
+import { fetchImage, processImage } from "../utils/retrieveMetadata";
 
 const Minter = ({walletAddress, img, imgBlob, metadata, tokenContract, tokenId, chain}) => {
-
+  const [status, setStatus] = useState('');
+  const [title, setTitle] = useState('starting!');
+  const [choppedImage, setChoppedImage] = useState('')
   //State variables
-  const [status, setStatus] = useState("");
   let navigate = useNavigate(); 
 
   let royaltyHolder, royaltyAmount, conditionalAddress;
@@ -20,47 +21,60 @@ const Minter = ({walletAddress, img, imgBlob, metadata, tokenContract, tokenId, 
   royaltyAmount = metadata[0].royaltyAmount != null ? <h2> Royalty Amount: {metadata[0].royaltyAmount} </h2>: <h2>Royalty Amount: None identified </h2>;
 
   const onMintPressed = async () => {
-    const initStatus = "Butchering image and creating metadata. This may take up to a minute."
-    setStatus(initStatus);
-    const { success, status, data } = await butcherNft(walletAddress, imgBlob, metadata, tokenContract, tokenId, chain);
+    const status = "Butchering image and creating metadata. This may take up to a minute."
+    setStatus(status)
+    const { success, butcherStatus, data } = await butcherNft(walletAddress, imgBlob, metadata, tokenContract, tokenId, chain);
+    metadata = [data];
     URL.revokeObjectURL(imgBlob);
     if (success){
-      setStatus(status);
+      setStatus(butcherStatus)
     } else {
-      setStatus("Something went wrong! " + status);
+      status = "Something went wrong! " + status;
       navigate("/import");
     }
 
     const { successEth, statusEth, txHash } = await mintEth(walletAddress, data);
+    metadata[0].ethTxHash = txHash;
 
     if (successEth){
-      setStatus(statusEth);
+      setStatus(statusEth)
     } else {
-      setStatus("Something went wrong! " + statusEth);
+      status = "Something went wrong! " + statusEth;
+      navigate("/import");
     }
 
 
-    const { successPoly, statusPoly, mintPolyData } = await mintPolygon(data);
+    const { successPoly, statusPoly, polygonTokenId } = await mintPolygon(data);
+    metadata[0].polygonTokenId = polygonTokenId
 
     if (successPoly){
-      setStatus(statusPoly);
+      setStatus(statusPoly)
     } else {
-      setStatus("Something went wrong! " + statusPoly);
+      status = "Something went wrong! " + statusPoly + "Polygon mint failed. However, we've already minted the Ethereum token, so all is good there... Redirecting...";
     }
-    
-    const { successRetrieve, statusRetrieve, ethTokenId } = await retrieveEthToken(txHash);
-    if (successRetrieve){
-      setStatus(statusRetrieve);
-    } else {
-      setStatus("Something went wrong! " + statusRetrieve);
-    }
+    console.log(metadata);
+    console.log("image manipulation");
+    let hash = metadata[0].ipfsImage.split(/[/]+/).pop();   
+    console.log("HASH =>", hash) 
+    let normalisedImage = "https://butcher.infura-ipfs.io/ipfs/" + hash
+    let localImage = await fetchImage(normalisedImage);
+    console.log("LOCAL IMAGE =>", localImage)
+    if(localImage == undefined || localImage == null){
+      console.log("imageError");
+    } 
+    let imageObjectUrl = URL.createObjectURL(localImage);
+    console.log("IMAGE OBJECTURL =>", imageObjectUrl);
+
+    setTitle('Butchered!')
+    setChoppedImage(imageObjectUrl);
   
   };
 
   return (
     <div className="Minter">
       <br></br>
-
+      {title}
+      <img src={choppedImage} />      
       <img src={img} />
       <h2 id="status">
         {status}
@@ -73,10 +87,12 @@ const Minter = ({walletAddress, img, imgBlob, metadata, tokenContract, tokenId, 
       {royaltyHolder}
       {royaltyAmount}
 
+      <button id='mintButton' onClick={onMintPressed}>Mint NFT</button>
 
-      <button id="mintButton" onClick={onMintPressed}>
-        Mint NFT
-      </button>
+
+
+
+      
 
     </div>
   );
